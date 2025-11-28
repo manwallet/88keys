@@ -215,18 +215,16 @@ export default function DailyPractice({ pieces }: DailyPracticeProps) {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {hasAiSupport && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleRefresh}
-              disabled={loading}
-              className="h-7 w-7 p-0 text-zinc-500 hover:text-zinc-300"
-              title="刷新 AI 建议"
-            >
-              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-            </Button>
-          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleRefresh}
+            disabled={loading}
+            className="h-7 w-7 p-0 text-zinc-500 hover:text-zinc-300"
+            title="刷新 AI 建议"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+          </Button>
           <Flame className="h-5 w-5 text-orange-400 animate-pulse" />
         </div>
       </div>
@@ -234,11 +232,39 @@ export default function DailyPractice({ pieces }: DailyPracticeProps) {
       {/* AI 建议内容 */}
       {hasAiSupport && aiSuggestion?.suggestion ? (
         <div className="mb-4 p-3 rounded-lg bg-violet-500/10 border border-violet-500/20">
-          <div className="flex items-start gap-2">
-            <Sparkles className="h-4 w-4 text-violet-400 mt-0.5 shrink-0" />
-            <p className="text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap">
-              {aiSuggestion.suggestion}
-            </p>
+          <div className="flex items-center gap-1.5 mb-2">
+            <Sparkles className="h-3.5 w-3.5 text-violet-400" />
+            <span className="text-xs text-violet-400">AI 建议</span>
+          </div>
+          <div className="text-sm text-zinc-300 leading-relaxed space-y-2">
+            {aiSuggestion.suggestion.split('\n').filter(Boolean).map((line, i) => {
+              // 去除 markdown 符号
+              let text = line
+                .replace(/\*\*(.*?)\*\*/g, '$1')
+                .replace(/\*(.*?)\*/g, '$1')
+                .replace(/^#+\s*/, '')
+                .trim();
+
+              // 处理标题行（如 "今日重点：xxx"）
+              if (text.includes('：') && text.indexOf('：') < 15) {
+                const [title, ...rest] = text.split('：');
+                return (
+                  <div key={i}>
+                    <span className="text-violet-300 font-medium">{title}：</span>
+                    <span>{rest.join('：')}</span>
+                  </div>
+                );
+              }
+              // 处理编号列表（如 "①xxx"）
+              if (/^[①②③④⑤⑥⑦⑧⑨⑩]/.test(text)) {
+                return (
+                  <div key={i} className="pl-2 text-zinc-400">
+                    {text}
+                  </div>
+                );
+              }
+              return <p key={i}>{text}</p>;
+            })}
           </div>
         </div>
       ) : (

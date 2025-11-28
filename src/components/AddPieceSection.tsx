@@ -27,30 +27,53 @@ export default function AddPieceSection({ pieces }: AddPieceSectionProps) {
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-col sm:flex-row gap-2">
+      {/* 桌面端布局 */}
+      <div className="hidden sm:flex gap-2">
         <div className="flex-1">
           <AddPieceForm />
         </div>
-        <div className="flex gap-2">
+        <Button
+          variant="outline"
+          className="h-auto py-6 w-28"
+          onClick={() => setIsBatchDialogOpen(true)}
+        >
+          <ListPlus className="h-5 w-5 mr-2" />
+          批量添加
+        </Button>
+        {topLevelPieces.length > 0 && (
           <Button
             variant="outline"
-            className="flex-1 sm:flex-none h-auto py-3 sm:py-6 px-4"
-            onClick={() => setIsBatchDialogOpen(true)}
+            className="h-auto py-6 w-28"
+            onClick={() => setIsReorganizeDialogOpen(true)}
           >
-            <ListPlus className="h-5 w-5 mr-2" />
-            批量添加
+            <FolderTree className="h-5 w-5 mr-2" />
+            整理曲目
           </Button>
-          {topLevelPieces.length > 0 && (
-            <Button
-              variant="outline"
-              className="flex-1 sm:flex-none h-auto py-3 sm:py-6 px-4"
-              onClick={() => setIsReorganizeDialogOpen(true)}
-            >
-              <FolderTree className="h-5 w-5 mr-2" />
-              整理曲目
-            </Button>
-          )}
-        </div>
+        )}
+      </div>
+      {/* 手机端布局 - 三个按钮等宽 */}
+      <div className="sm:hidden grid grid-cols-3 gap-2">
+        <AddPieceForm mobile />
+        <Button
+          variant="outline"
+          className="h-auto py-4 px-2 flex-col gap-1"
+          onClick={() => setIsBatchDialogOpen(true)}
+        >
+          <ListPlus className="h-5 w-5" />
+          <span className="text-xs">批量添加</span>
+        </Button>
+        {topLevelPieces.length > 0 ? (
+          <Button
+            variant="outline"
+            className="h-auto py-4 px-2 flex-col gap-1"
+            onClick={() => setIsReorganizeDialogOpen(true)}
+          >
+            <FolderTree className="h-5 w-5" />
+            <span className="text-xs">整理曲目</span>
+          </Button>
+        ) : (
+          <div />
+        )}
       </div>
 
       <BatchAddDialog

@@ -53,7 +53,11 @@ const GENRE_OPTIONS = [
   { value: '其他', label: '其他' },
 ];
 
-export default function AddPieceForm() {
+interface AddPieceFormProps {
+  mobile?: boolean;
+}
+
+export default function AddPieceForm({ mobile = false }: AddPieceFormProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [isAiLoading, setIsAiLoading] = useState(false);
@@ -150,6 +154,18 @@ export default function AddPieceForm() {
   };
 
   if (!isExpanded) {
+    if (mobile) {
+      return (
+        <Button
+          onClick={() => setIsExpanded(true)}
+          className="w-full h-auto py-4 px-2 flex-col gap-1"
+          variant="outline"
+        >
+          <Plus className="h-5 w-5" />
+          <span className="text-xs">添加曲目</span>
+        </Button>
+      );
+    }
     return (
       <Button
         onClick={() => setIsExpanded(true)}

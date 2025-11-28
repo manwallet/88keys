@@ -4,6 +4,7 @@ import AddPieceSection from '@/components/AddPieceSection';
 import DashboardHeader from '@/components/DashboardHeader';
 import DailyPractice from '@/components/DailyPractice';
 import QuickStats from '@/components/QuickStats';
+import LearningGoals from '@/components/LearningGoals';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,9 +26,10 @@ export default async function DashboardPage() {
 
         {/* 三栏布局 */}
         <div className="mt-6 grid grid-cols-1 lg:grid-cols-[300px_1fr_300px] xl:grid-cols-[320px_1fr_320px] gap-6">
-          {/* 左侧边栏 - 每日练习建议 */}
+          {/* 左侧边栏 - 每日练习建议 + 学习目标 */}
           <div className="hidden lg:block space-y-4">
             <DailyPractice pieces={pieces} />
+            <LearningGoals />
           </div>
 
           {/* 中间主内容区 */}
@@ -51,6 +53,7 @@ export default async function DashboardPage() {
         {/* 移动端显示 */}
         <div className="lg:hidden mt-6 space-y-6">
           <DailyPractice pieces={pieces} />
+          <LearningGoals />
           <QuickStats pieces={pieces} />
         </div>
       </div>

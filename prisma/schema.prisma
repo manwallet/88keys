@@ -100,3 +100,20 @@ model AiSuggestion {
 
   createdAt      DateTime @default(now())
 }
+
+// 学习目标表
+model LearningGoal {
+  id          String   @id @default(cuid())
+  title       String   // 目标标题
+  description String?  // 目标描述
+  targetDate  DateTime? // 目标日期
+  status      String   @default("Active") // Active, Completed, Paused
+  priority    Int      @default(0) // 优先级
+
+  // AI 生成的学习计划
+  aiPlan      String?  // AI 生成的计划内容
+  aiPlanDate  String?  // 计划生成日期
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

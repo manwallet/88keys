@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { getSettings } from '@/lib/settings';
 
 // GET /api/ai-suggestion - 获取 AI 练习建议
 export async function GET(req: NextRequest) {
   try {
-    // 检查是否配置了 OpenAI
-    const apiKey = process.env.OPENAI_API_KEY;
-    const baseUrl = process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1';
+    // 从数据库获取 AI 配置
+    const settings = await getSettings();
+    const apiKey = settings.llmApiKey || process.env.OPENAI_API_KEY;
+    const baseUrl = settings.llmBaseUrl || process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1';
+    const model = settings.llmModel || 'gpt-4o-mini';
 
     if (!apiKey) {
       return NextResponse.json({
@@ -95,7 +98,7 @@ ${waitingInfo || '暂无'}
         'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: model,
         messages: [
           { role: 'user', content: prompt }
         ],

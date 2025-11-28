@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: 88keys
+    ports:
+      - "3000:3000"
+    volumes:
+      - 88keys-data:/app/prisma/db_mount
+    environment:
+      - DATABASE_URL=file:/app/prisma/db_mount/piano.db
+      - NODE_ENV=production
+      # AI 练习建议功能（可选）
+      # - OPENAI_API_KEY=your-api-key
+      # - OPENAI_BASE_URL=https://api.openai.com/v1
+    restart: unless-stopped
+
+volumes:
+  88keys-data:

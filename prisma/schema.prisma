@@ -1,0 +1,102 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x", "linux-musl-arm64-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// 曲目表
+model Piece {
+  id          String   @id @default(cuid())
+  title       String   // 曲名
+  composer    String   // 作曲家
+  workNumber  String?  // 作品号 (Op. No.)
+  genre       String?  // 流派/时期
+
+  totalPages  Int      @default(0) // 总页数
+  learnedPages Int     @default(0) // 已学页数
+
+  status      String   @default("Active") // Active, Completed, OnHold, NotStarted
+  difficulty  String?  // Easy, Medium, Hard
+
+  assignedBy  String?  // 布置人（老师名字等）
+  notes       String?  // 备注
+
+  // 父子关系（用于乐章、练习曲集等）
+  parentId    String?  // 父曲目ID
+  parent      Piece?   @relation("PieceChildren", fields: [parentId], references: [id], onDelete: SetNull)
+  children    Piece[]  @relation("PieceChildren")
+  sortOrder   Int      @default(0) // 排序顺序（用于乐章顺序等）
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  sessions    PracticeSession[]
+  lessonItems LessonItem[]
+}
+
+// 上课记录表
+model Lesson {
+  id          String   @id @default(cuid())
+  date        DateTime @default(now()) // 上课日期
+  teacher     String   // 老师名字
+  duration    Int      @default(60) // 课程时长（分钟）
+  notes       String?  // 课堂笔记
+
+  items       LessonItem[] // 这节课上了哪些曲目
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// 上课曲目关联表
+model LessonItem {
+  id        String   @id @default(cuid())
+  lessonId  String
+  lesson    Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  pieceId   String
+  piece     Piece    @relation(fields: [pieceId], references: [id], onDelete: Cascade)
+  feedback  String?  // 老师对这首曲子的反馈
+
+  createdAt DateTime @default(now())
+}
+
+// 练习会话表
+model PracticeSession {
+  id        String   @id @default(cuid())
+  date      DateTime @default(now())
+  note      String?  // 练习笔记
+  duration  Int      @default(0) // 练习时长（分钟）
+  mood      String?  // 状态/心情 (e.g., Good, Tired, Frustrated)
+  
+  pieceId   String
+  piece     Piece    @relation(fields: [pieceId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// 系统设置表 (Key-Value 存储)
+model SystemSetting {
+  key       String   @id
+  value     String
+
+  updatedAt DateTime @updatedAt
+}
+
+// AI 建议缓存表
+model AiSuggestion {
+  id             String   @id @default(cuid())
+  date           String   @unique // 日期 YYYY-MM-DD
+  content        String   // AI 生成的建议内容
+  focusPieceId   String?  // 今日重点曲目 JSON
+  reviewPieceIds String?  // 复习曲目列表 JSON
+
+  createdAt      DateTime @default(now())
+}

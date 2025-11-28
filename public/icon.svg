@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a2e"/>
+      <stop offset="100%" style="stop-color:#16213e"/>
+    </linearGradient>
+    <linearGradient id="key" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff"/>
+      <stop offset="100%" style="stop-color:#e0e0e0"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#fbbf24"/>
+      <stop offset="100%" style="stop-color:#f59e0b"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background circle -->
+  <circle cx="50" cy="50" r="48" fill="url(#bg)" stroke="#fbbf24" stroke-width="2"/>
+
+  <!-- Piano keys (simplified) -->
+  <g transform="translate(15, 35)">
+    <!-- White keys -->
+    <rect x="0" y="0" width="10" height="35" rx="1" fill="url(#key)" stroke="#333" stroke-width="0.5"/>
+    <rect x="12" y="0" width="10" height="35" rx="1" fill="url(#key)" stroke="#333" stroke-width="0.5"/>
+    <rect x="24" y="0" width="10" height="35" rx="1" fill="url(#key)" stroke="#333" stroke-width="0.5"/>
+    <rect x="36" y="0" width="10" height="35" rx="1" fill="url(#key)" stroke="#333" stroke-width="0.5"/>
+    <rect x="48" y="0" width="10" height="35" rx="1" fill="url(#key)" stroke="#333" stroke-width="0.5"/>
+    <rect x="60" y="0" width="10" height="35" rx="1" fill="url(#key)" stroke="#333" stroke-width="0.5"/>
+
+    <!-- Black keys -->
+    <rect x="7" y="0" width="8" height="22" rx="1" fill="#1a1a2e"/>
+    <rect x="19" y="0" width="8" height="22" rx="1" fill="#1a1a2e"/>
+    <rect x="43" y="0" width="8" height="22" rx="1" fill="#1a1a2e"/>
+    <rect x="55" y="0" width="8" height="22" rx="1" fill="#1a1a2e"/>
+  </g>
+
+  <!-- Musical note accent -->
+  <g transform="translate(65, 18)">
+    <ellipse cx="8" cy="12" rx="6" ry="5" fill="url(#accent)"/>
+    <rect x="13" y="-8" width="3" height="20" fill="url(#accent)"/>
+    <path d="M16,-8 Q28,-5 16,5" fill="none" stroke="url(#accent)" stroke-width="3"/>
+  </g>
+</svg>

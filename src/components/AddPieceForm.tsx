@@ -55,9 +55,10 @@ const GENRE_OPTIONS = [
 
 interface AddPieceFormProps {
   mobile?: boolean;
+  onClose?: () => void;
 }
 
-export default function AddPieceForm({ mobile = false }: AddPieceFormProps) {
+export default function AddPieceForm({ mobile = false, onClose }: AddPieceFormProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [isAiLoading, setIsAiLoading] = useState(false);
@@ -153,6 +154,174 @@ export default function AddPieceForm({ mobile = false }: AddPieceFormProps) {
     }
   };
 
+  // 弹窗模式：直接显示表单
+  if (onClose) {
+    return (
+      <Card>
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <CardTitle>添加新曲目</CardTitle>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                reset();
+                setError(null);
+                onClose();
+              }}
+            >
+              取消
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={async (e) => {
+            await handleSubmit(async (data) => {
+              await onSubmit(data);
+              onClose();
+            })(e);
+          }} className="space-y-4">
+            {error && (
+              <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
+                {error}
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="title">曲名 *</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="title"
+                    placeholder="输入曲名，点击右侧按钮让 AI 帮你补全信息"
+                    {...register('title')}
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={handleAiFill}
+                    disabled={isAiLoading}
+                    title="AI 自动填充"
+                  >
+                    {isAiLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <Sparkles className="h-4 w-4 mr-1" />
+                        AI 填充
+                      </>
+                    )}
+                  </Button>
+                </div>
+                {errors.title && (
+                  <p className="text-sm text-destructive">{errors.title.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="composer">作曲家 *</Label>
+                <Input id="composer" placeholder="例如：贝多芬" {...register('composer')} />
+                {errors.composer && (
+                  <p className="text-sm text-destructive">{errors.composer.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="workNumber">作品号</Label>
+                <Input id="workNumber" placeholder="例如：Op. 27 No. 2" {...register('workNumber')} />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="genre">时期/流派</Label>
+                <select
+                  id="genre"
+                  {...register('genre')}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  {GENRE_OPTIONS.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="difficulty">难度</Label>
+                <select
+                  id="difficulty"
+                  {...register('difficulty')}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  {DIFFICULTY_OPTIONS.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="totalPages">总页数</Label>
+                <Input
+                  id="totalPages"
+                  type="number"
+                  placeholder="0"
+                  min="0"
+                  {...register('totalPages')}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="assignedBy">布置人</Label>
+                <Input
+                  id="assignedBy"
+                  placeholder="例如：王老师"
+                  {...register('assignedBy')}
+                />
+              </div>
+
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="status">状态</Label>
+                <div className="flex gap-4 flex-wrap">
+                  {STATUS_OPTIONS.map(opt => (
+                    <label
+                      key={opt.value}
+                      className="flex items-center gap-2 cursor-pointer"
+                    >
+                      <input
+                        type="radio"
+                        value={opt.value}
+                        {...register('status')}
+                        className="h-4 w-4"
+                      />
+                      <span className="text-sm">{opt.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-2">
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    添加中...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="h-4 w-4 mr-2" />
+                    添加曲目
+                  </>
+                )}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // 内联模式：需要先点击展开
   if (!isExpanded) {
     if (mobile) {
       return (

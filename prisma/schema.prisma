@@ -117,3 +117,19 @@ model LearningGoal {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+// 今日练习表
+model DailyPracticeItem {
+  id          String   @id @default(cuid())
+  date        String   // 日期 YYYY-MM-DD
+  pieceId     String   // 曲目ID
+  pieceTitle  String   // 曲目标题（冗余存储，防止曲目删除后丢失）
+  pieceComposer String // 作曲家（冗余存储）
+  completed   Boolean  @default(false) // 是否完成
+  sortOrder   Int      @default(0) // 排序
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([date, pieceId]) // 同一天同一曲目只能添加一次
+}

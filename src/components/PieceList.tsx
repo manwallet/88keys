@@ -23,8 +23,8 @@ interface Piece {
   assignedBy?: string | null;
   parentId?: string | null;
   children?: Piece[];
-  updatedAt?: string;
-  createdAt?: string;
+  updatedAt?: Date | string;
+  createdAt?: Date | string;
   _count?: {
     sessions: number;
     children?: number;
@@ -243,7 +243,7 @@ function PieceRow({
         </div>
 
         {/* 操作 */}
-        <div className="shrink-0 w-20 flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="shrink-0 w-20 flex items-center justify-end gap-1">
           <Button
             variant="ghost"
             size="sm"
@@ -397,7 +397,7 @@ export default function PieceList({ pieces }: PieceListProps) {
 
   return (
     <>
-      <div className="rounded-xl border border-white/5 overflow-hidden">
+      <div className="rounded-xl border border-white/5 overflow-x-auto">
         {/* 搜索和排序栏 */}
         <div className="flex items-center gap-4 px-4 py-3 bg-white/[0.02] border-b border-white/5">
           {/* 搜索框 */}

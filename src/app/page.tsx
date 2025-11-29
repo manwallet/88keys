@@ -24,8 +24,8 @@ export default async function DashboardPage() {
       <div className="mx-auto max-w-[1800px]">
         <DashboardHeader />
 
-        {/* 三栏布局 */}
-        <div className="mt-6 grid grid-cols-1 lg:grid-cols-[300px_1fr_300px] xl:grid-cols-[320px_1fr_320px] gap-6">
+        {/* 三栏布局 - 缩小侧边栏宽度 */}
+        <div className="mt-6 grid grid-cols-1 lg:grid-cols-[260px_1fr_260px] xl:grid-cols-[280px_1fr_280px] gap-4">
           {/* 左侧边栏 - 每日练习建议 + 学习目标 */}
           <div className="hidden lg:block space-y-4">
             <DailyPractice pieces={pieces} />

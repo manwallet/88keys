@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { Lightbulb, Music, Target, Flame, Sparkles, RefreshCw, Bot } from 'lucide-react';
+import { Lightbulb, Music, Target, Flame, Sparkles, RefreshCw, Bot, Plus, X, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface Piece {
@@ -12,7 +12,7 @@ interface Piece {
   totalPages: number;
   learnedPages: number;
   difficulty?: string | null;
-  updatedAt?: string;
+  updatedAt?: Date | string;
   parentId?: string | null;
   children?: Piece[];
 }
@@ -76,10 +76,22 @@ const PRACTICE_TIPS = [
 const AI_CACHE_KEY = '88keys_ai_suggestion';
 const AI_DATE_KEY = '88keys_ai_date';
 
+interface UserPracticeItem {
+  id: string;
+  pieceId: string;
+  pieceTitle: string;
+  pieceComposer: string;
+  completed: boolean;
+}
+
 export default function DailyPractice({ pieces }: DailyPracticeProps) {
   const [aiSuggestion, setAiSuggestion] = useState<AiSuggestion | null>(null);
   const [loading, setLoading] = useState(false);
   const [hasAiSupport, setHasAiSupport] = useState(false);
+  const [userPracticeList, setUserPracticeList] = useState<UserPracticeItem[]>([]);
+  const [showPieceSelector, setShowPieceSelector] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [practiceLoading, setPracticeLoading] = useState(false);
 
   const today = new Date().toISOString().split('T')[0];
 
@@ -132,6 +144,23 @@ export default function DailyPractice({ pieces }: DailyPracticeProps) {
     return { focusPiece, reviewPieces, tip };
   }, [pieces]);
 
+  // 从数据库加载今日练习列表
+  const fetchPracticeList = async () => {
+    try {
+      const res = await fetch(`/api/daily-practice?date=${today}`);
+      if (res.ok) {
+        const data = await res.json();
+        setUserPracticeList(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch practice list:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchPracticeList();
+  }, [today]);
+
   // 检查并加载 AI 建议
   useEffect(() => {
     const cachedDate = localStorage.getItem(AI_DATE_KEY);
@@ -179,6 +208,90 @@ export default function DailyPractice({ pieces }: DailyPracticeProps) {
     localStorage.removeItem(AI_CACHE_KEY);
     fetchAiSuggestion();
   };
+
+  // 添加曲目到今日练习
+  const addToPractice = async (piece: Piece) => {
+    if (userPracticeList.some(p => p.pieceId === piece.id)) return;
+    setPracticeLoading(true);
+    try {
+      const res = await fetch('/api/daily-practice', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          date: today,
+          pieceId: piece.id,
+          pieceTitle: piece.title,
+          pieceComposer: piece.composer,
+        }),
+      });
+      if (res.ok) {
+        await fetchPracticeList();
+      }
+    } catch (error) {
+      console.error('Failed to add practice:', error);
+    } finally {
+      setPracticeLoading(false);
+      setShowPieceSelector(false);
+      setSearchQuery('');
+    }
+  };
+
+  // 移除曲目
+  const removeFromPractice = async (id: string) => {
+    try {
+      const res = await fetch(`/api/daily-practice/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setUserPracticeList(prev => prev.filter(p => p.id !== id));
+      }
+    } catch (error) {
+      console.error('Failed to remove practice:', error);
+    }
+  };
+
+  // 切换完成状态
+  const toggleCompleted = async (id: string) => {
+    const item = userPracticeList.find(p => p.id === id);
+    if (!item) return;
+    try {
+      const res = await fetch(`/api/daily-practice/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ completed: !item.completed }),
+      });
+      if (res.ok) {
+        setUserPracticeList(prev =>
+          prev.map(p => p.id === id ? { ...p, completed: !p.completed } : p)
+        );
+      }
+    } catch (error) {
+      console.error('Failed to toggle completed:', error);
+    }
+  };
+
+  // 获取所有可选曲目（包括子曲目）
+  const allSelectablePieces = useMemo(() => {
+    const result: Piece[] = [];
+    pieces.forEach(piece => {
+      if (!piece.parentId) {
+        if (piece.children && piece.children.length > 0) {
+          piece.children.forEach(child => result.push(child));
+        } else {
+          result.push(piece);
+        }
+      }
+    });
+    return result;
+  }, [pieces]);
+
+  // 过滤搜索结果
+  const filteredPieces = useMemo(() => {
+    if (!searchQuery.trim()) return allSelectablePieces.slice(0, 10);
+    const query = searchQuery.toLowerCase();
+    return allSelectablePieces.filter(p =>
+      p.title.toLowerCase().includes(query) ||
+      p.composer.toLowerCase().includes(query)
+    ).slice(0, 10);
+  }, [allSelectablePieces, searchQuery]);
 
   const dayOfWeek = getDayOfWeek();
   const dateString = getDateString();
@@ -330,18 +443,107 @@ export default function DailyPractice({ pieces }: DailyPracticeProps) {
         </div>
       )}
 
+      {/* 今日练习（用户自选） */}
+      <div className="mb-4">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-1.5">
+            <Music className="h-4 w-4 text-emerald-400" />
+            <span className="text-xs font-medium text-zinc-400">今日练习</span>
+            {userPracticeList.length > 0 && (
+              <span className="text-xs text-zinc-500">
+                ({userPracticeList.filter(p => p.completed).length}/{userPracticeList.length})
+              </span>
+            )}
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowPieceSelector(!showPieceSelector)}
+            className="h-6 px-2 text-xs text-zinc-500 hover:text-zinc-300"
+          >
+            <Plus className="h-3 w-3 mr-1" />
+            添加
+          </Button>
+        </div>
+
+        {/* 曲目选择器 */}
+        {showPieceSelector && (
+          <div className="mb-3 p-3 rounded-lg bg-white/[0.03] border border-white/10">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="搜索曲目..."
+              className="w-full px-3 py-1.5 text-sm bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:border-emerald-500/50 text-zinc-200 placeholder-zinc-500"
+              autoFocus
+            />
+            <div className="mt-2 max-h-40 overflow-y-auto space-y-1">
+              {filteredPieces.map(piece => (
+                <button
+                  key={piece.id}
+                  onClick={() => addToPractice(piece)}
+                  disabled={userPracticeList.some(p => p.pieceId === piece.id) || practiceLoading}
+                  className="w-full text-left px-2 py-1.5 rounded text-sm hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <p className="text-zinc-300 truncate">{piece.title}</p>
+                  <p className="text-xs text-zinc-500 truncate">{piece.composer}</p>
+                </button>
+              ))}
+              {filteredPieces.length === 0 && (
+                <p className="text-xs text-zinc-500 text-center py-2">没有找到曲目</p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* 用户练习列表 */}
+        {userPracticeList.length > 0 ? (
+          <div className="space-y-1.5">
+            {userPracticeList.map((item) => (
+              <div
+                key={item.id}
+                className={`flex items-center gap-2 p-2 rounded-lg transition-colors ${
+                  item.completed
+                    ? 'bg-emerald-500/10 border border-emerald-500/20'
+                    : 'bg-white/[0.02] hover:bg-white/[0.04]'
+                }`}
+              >
+                <button
+                  onClick={() => toggleCompleted(item.id)}
+                  className={`shrink-0 w-5 h-5 rounded border flex items-center justify-center transition-colors ${
+                    item.completed
+                      ? 'bg-emerald-500 border-emerald-500 text-white'
+                      : 'border-zinc-600 hover:border-zinc-400'
+                  }`}
+                >
+                  {item.completed && <Check className="h-3 w-3" />}
+                </button>
+                <div className="flex-1 min-w-0">
+                  <p className={`text-sm truncate ${item.completed ? 'text-emerald-300 line-through' : 'text-zinc-300'}`}>
+                    {item.pieceTitle}
+                  </p>
+                  <p className="text-xs text-zinc-500 truncate">{item.pieceComposer}</p>
+                </div>
+                <button
+                  onClick={() => removeFromPractice(item.id)}
+                  className="shrink-0 p-1 text-zinc-600 hover:text-red-400 transition-colors"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-xs text-zinc-500 text-center py-2">
+            点击上方「添加」选择今日要练习的曲目
+          </p>
+        )}
+      </div>
+
       {/* 加载状态 */}
       {loading && (
         <div className="text-center py-2">
           <p className="text-xs text-zinc-500">正在获取 AI 建议...</p>
-        </div>
-      )}
-
-      {/* 没有活跃曲目时的提示 */}
-      {!displayFocusPiece && displayReviewPieces.length === 0 && !loading && (
-        <div className="text-center py-4 text-zinc-500">
-          <p className="text-sm">还没有正在学习的曲目</p>
-          <p className="text-xs mt-1">添加一些曲目开始你的练习之旅吧</p>
         </div>
       )}
     </div>
